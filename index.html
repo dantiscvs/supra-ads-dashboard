@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Supra Ads — Dashboard</title>
+<style>
+  :root {
+    --new: #1a7f37; --new-bg: #e6f7ec;
+    --keep: #0969da; --keep-bg: #eaf3ff;
+    --dedup: #9a6700; --dedup-bg: #fff6e0;
+    --pause: #cf222e; --pause-bg: #ffeef0;
+    --untouched: #57606a; --untouched-bg: #f3f4f6;
+    --border: #d0d7de;
+    --accent: #6639ba;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: #f6f8fa;
+    margin: 0;
+    padding: 0;
+    color: #1f2328;
+  }
+
+  /* ---- Login gate ---- */
+  #loginGate {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #6639ba 0%, #1a7f37 100%);
+  }
+  .login-box {
+    background: white;
+    border-radius: 14px;
+    padding: 36px 32px;
+    width: 320px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+    text-align: center;
+  }
+  .login-box h1 { font-size: 18px; margin: 0 0 4px 0; }
+  .login-box p { font-size: 13px; color: #57606a; margin: 0 0 20px 0; }
+  .login-box input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+  .login-box button {
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .login-box button:hover { opacity: 0.9; }
+  #loginError { color: var(--pause); font-size: 12px; margin-top: 8px; min-height: 16px; }
+
+  /* ---- Main app ---- */
+  #mainApp { display: none; padding: 24px; max-width: 1100px; margin: 0 auto; }
+
+  .top-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px 0; }
+  .subtitle { color: #57606a; font-size: 13px; }
+
+  .tabs { display: flex; gap: 4px; background: #eaeef2; border-radius: 10px; padding: 4px; }
+  .tab-btn {
+    border: none;
+    background: transparent;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #57606a;
+  }
+  .tab-btn.active { background: white; color: var(--accent); box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .med-placeholder {
+    background: white;
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    padding: 60px 20px;
+    text-align: center;
+    color: #57606a;
+    font-size: 14px;
+  }
+
+  .panel {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+  }
+  .panel h2 {
+    font-size: 15px;
+    margin: 0 0 12px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel p { font-size: 13px; line-height: 1.6; color: #3a3f45; }
+
+  /* checklist */
+  .checklist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 720px) { .checklist-grid { grid-template-columns: 1fr; } }
+  .checklist-col h3 { font-size: 13px; margin: 0 0 8px 0; }
+  .checklist-col ul { margin: 0; padding-left: 0; list-style: none; }
+  .checklist-col li {
+    font-size: 12.5px;
+    line-height: 1.5;
+    padding: 8px 10px 8px 30px;
+    margin-bottom: 6px;
+    border-radius: 8px;
+    position: relative;
+  }
+  .done-item { background: var(--new-bg); color: #14532d; }
+  .done-item::before { content: "✓"; position: absolute; left: 10px; font-weight: 700; color: var(--new); }
+  .pending-item { background: var(--pause-bg); color: #7a1f1f; }
+  .pending-item::before { content: "○"; position: absolute; left: 10px; font-weight: 700; color: var(--pause); }
+
+  /* webmaster section */
+  .webmaster-instructions {
+    background: #fbfbfb;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 12.5px;
+    line-height: 1.6;
+    margin-bottom: 14px;
+  }
+  table.webmaster-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-bottom: 12px; }
+  table.webmaster-table th, table.webmaster-table td {
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    text-align: left;
+  }
+  table.webmaster-table th { background: #f6f8fa; }
+  .download-btn {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    text-decoration: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+
+  /* QS chart */
+  .qs-empty { font-size: 13px; color: #57606a; padding: 20px; text-align: center; }
+
+  /* legend / cards (restructuring plan) */
+  .warning-banner {
+    background: var(--pause-bg);
+    border: 1px solid var(--pause);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: #82071e;
+  }
+  .warning-banner b { color: var(--pause); }
+  .legend { display: flex; gap: 16px; margin-bottom: 16px; font-size: 12px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .board { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; align-items: start; }
+  .card { background: white; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); overflow: hidden; }
+  .card-header { padding: 12px 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .card-header:hover { background: #f6f8fa; }
+  .card-title { font-weight: 600; font-size: 14px; }
+  .card-status { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 12px; white-space: nowrap; }
+  .status-NEW, .status-new { background: var(--new-bg); color: var(--new); }
+  .status-KEEP, .status-keep { background: var(--keep-bg); color: var(--keep); }
+  .status-dedup { background: var(--dedup-bg); color: var(--dedup); }
+  .status-PAUSE, .status-pause, .status-TOPAUSE { background: var(--pause-bg); color: var(--pause); }
+  .status-UNTOUCHED, .status-untouched { background: var(--untouched-bg); color: var(--untouched); }
+  .card-budget { padding: 0 14px 10px 14px; font-size: 12px; color: #57606a; }
+  .card-note { padding: 0 14px 10px 14px; font-size: 12px; color: #4d5358; background: #fbfbfb; border-top: 1px dashed var(--border); padding-top: 8px; line-height: 1.5; }
+  .card-body { display: none; border-top: 1px solid var(--border); padding: 10px 14px 14px 14px; }
+  .card.expanded .card-body { display: block; }
+  .chevron { transition: transform 0.15s; font-size: 11px; color: #57606a; }
+  .card.expanded .chevron { transform: rotate(90deg); }
+  .ad-group { margin-bottom: 10px; border: 1px solid #eaeef2; border-radius: 6px; padding: 8px 10px; }
+  .ad-group-name { font-size: 12.5px; font-weight: 600; margin-bottom: 4px; display: flex; justify-content: space-between; }
+  .kw-count { font-size: 11px; color: #8b949e; font-weight: 400; }
+  .kw-list { font-size: 11.5px; color: #3a3f45; max-height: 130px; overflow-y: auto; line-height: 1.6; }
+  .kw-list span { display: inline-block; background: #f0f2f4; border-radius: 4px; padding: 1px 6px; margin: 1px 3px 1px 0; }
+  .lp-box { margin-top: 6px; font-size: 11px; background: #f0f7ff; border: 1px solid #cfe4ff; border-radius: 5px; padding: 6px 8px; }
+  .lp-box b { color: var(--keep); }
+  .headline-list { margin-top: 3px; }
+  .headline-list span { display: inline-block; background: #e6f7ec; color: var(--new); border-radius: 4px; padding: 1px 6px; margin: 1px 3px 1px 0; font-size: 10.5px; }
+  .ag-note { font-size: 11px; color: var(--dedup); margin-top: 4px; font-style: italic; }
+  .section-title { font-size: 13px; font-weight: 700; margin: 24px 0 10px 0; color: #57606a; text-transform: uppercase; letter-spacing: 0.03em; }
+  .summary-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .summary-pill { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; font-size: 12px; }
+  .summary-pill b { display: block; font-size: 16px; }
+</style>
+</head>
+<body>
+
+<div id="loginGate">
+  <div class="login-box">
+    <h1>Supra Ads Dashboard</h1>
+    <p>Wpisz hasło, aby zobaczyć zawartość</p>
+    <input type="password" id="pwInput" placeholder="Hasło" onkeydown="if(event.key==='Enter') checkPassword()">
+    <button onclick="checkPassword()">Wejdź</button>
+    <div id="loginError"></div>
+  </div>
+</div>
+
+<div id="mainApp">
+  <div class="top-header">
+    <div>
+      <h1>Supra Ads — Dashboard</h1>
+      <div class="subtitle">supradent.pl (Dent) / supramed.pl (Med)</div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" id="tabDentBtn" onclick="switchTab('dent')">Dent</button>
+      <button class="tab-btn" id="tabMedBtn" onclick="switchTab('med')">Med</button>
+    </div>
+  </div>
+
+  <div id="dentView" class="view active">
+
+    <div class="panel">
+      <h2>Status wdrożenia</h2>
+      <div class="checklist-grid">
+        <div class="checklist-col">
+          <h3>✅ Zrobione</h3>
+          <ul>
+            <li class="done-item">Split kampanii narkozowej: pauza grupy dzieci w oryginalnej kampanii, dedup 8 duplikatów słów u dorosłych, nowa kampania &quot;MG_GSN_Lecznie zębów pod narkozą (dzieci)&quot; z 13 frazami.</li>
+<li class="done-item">Nowe reklamy RSA z social proof (&quot;5 gwiazdek na Znanym Lekarzu&quot;) w obu grupach narkozowych (dorośli, dzieci) + skopiowane rozszerzenia (sitelinki, callouty, snippet, telefon, nazwa firmy).</li>
+<li class="done-item">Naprawiona strategia licytacji: obie kampanie narkozowe przełączone na Maximize Conversions (był problem ze stawką domyślną 0.01 zł).</li>
+<li class="done-item">Budżet Ortodoncji podniesiony z 6 do 20.56 PLN/dzień (625 PLN/mies), zgodnie z pełnym planem.</li>
+<li class="done-item">Nowa kampania MG_GSN_Implanty: 8 grup SKAG (dokładne dopasowanie) + 1 grupa ogólna (32 frazy skonsolidowane z Chirurgii), budżet 625 PLN/mies, Maximize Conversions.</li>
+<li class="done-item">Reklamy SKAG wzbogacone do maksimum (15 nagłówków / 4 opisy) + 12 rozszerzeń podłączonych do kampanii Implanty.</li>
+<li class="done-item">Zapauzowane duplikaty źródłowe w Chirurgii (&quot;Grupa reklam 1&quot;, &quot;Implanty zębowe&quot;) po migracji do Implantów.</li>
+<li class="done-item">Uruchomione śledzenie Quality Score (cotygodniowy snapshot + przypomnienie w poniedziałki).</li>
+          </ul>
+        </div>
+        <div class="checklist-col">
+          <h3>○ Do zrobienia</h3>
+          <ul>
+            <li class="pending-item">Kampania MG_GSN_Implanty jest PAUSED — wymaga ręcznego włączenia w interfejsie Google Ads po ostatecznym przejrzeniu.</li>
+<li class="pending-item">8 dedykowanych landing page&#x27;y pod SKAG (noindex, H1 = dokładna fraza) — czekamy na webmastera (patrz sekcja niżej).</li>
+<li class="pending-item">Po potwierdzeniu przez webmastera: aktualizacja final_urls reklam SKAG z tymczasowego /oferta/implantologia/ na docelowe podstrony.</li>
+<li class="pending-item">Docelowe budżety dla Narkozy (dorośli, obecnie budżet historyczny bez zmian) i Narkozy dla dzieci (obecnie placeholder 10 PLN/dzień) w ramach puli 2500 PLN.</li>
+<li class="pending-item">Dedup pozostałych duplikatów: 5 duplikatowych ad groups w Diagnostyce i 1 w Protetyce (&quot;Protetyka - [cennik/cena]&quot;).</li>
+<li class="pending-item">Redukcja budżetu kampanii brandowej do puli &quot;pozostałe 500 zł&quot; (~122 → 68 PLN/mies) — ryzykowna zmiana najlepiej działającej kampanii, jeszcze nie potwierdzona przez klienta.</li>
+<li class="pending-item">Nagłówki z cenami (z cennik.md) dla pozostałych kampanii — obecnie tylko Implanty ma cenę w nagłówku.</li>
+<li class="pending-item">Sekcja Med (supramed.pl) — do przygotowania w kolejnym etapie.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Implanty — zadanie dla webmastera</h2>
+      <div class="webmaster-instructions">
+        Kampania Google Ads <b>MG_GSN_Implanty</b> ma pilotaż SKAG (jedna fraza = jedna grupa reklam)
+        na 8 głównych frazach implantowych. Każda z nich potrzebuje <b>dedykowanej podstrony</b> na
+        supradent.pl, zanim reklamy zaczną kierować tam ruch (na razie tymczasowo kierują na
+        <code>/oferta/implantologia/</code>). Dla każdego wiersza w tabeli poniżej:
+        <br>— nagłówek H1 strony musi brzmieć <b>dokładnie</b> tak jak w kolumnie "tytuł LP",
+        <br>— strona powinna mieć meta tag <code>noindex</code> (nie ma być indeksowana przez Google organicznie — to strona tylko pod reklamy),
+        <br>— reszta layoutu/designu strony może być identyczna jak istniejąca oferta implantologii,
+        <br>— jeden wyraźny przycisk CTA (np. "Umów konsultację").
+        <br>Gdy wszystkie 8 stron będą gotowe pod wskazanymi adresami URL, daj nam znać — zaktualizujemy
+        linki docelowe w reklamach.
+      </div>
+      <table class="webmaster-table">
+        <tr><th>Słowo kluczowe</th><th>Tytuł LP (H1)</th><th>URL</th></tr>
+        <tr><td>implant zęba</td><td>implant zęba</td><td><code>/implant-zeba/</code></td></tr>
+<tr><td>implanty zębowe</td><td>implanty zębowe</td><td><code>/implanty-zebowe/</code></td></tr>
+<tr><td>Implanty Warszawa</td><td>Implanty Warszawa</td><td><code>/implanty-warszawa/</code></td></tr>
+<tr><td>implantolog warszawa</td><td>implantolog warszawa</td><td><code>/implantolog-warszawa/</code></td></tr>
+<tr><td>implant zęba cena</td><td>implant zęba cena</td><td><code>/implant-zeba-cena/</code></td></tr>
+<tr><td>implanty zębowe warszawa</td><td>implanty zębowe warszawa</td><td><code>/implanty-zebowe-warszawa/</code></td></tr>
+<tr><td>ile kosztuje implant zęba</td><td>ile kosztuje implant zęba</td><td><code>/ile-kosztuje-implant-zeba/</code></td></tr>
+<tr><td>dobry implantolog warszawa</td><td>dobry implantolog warszawa</td><td><code>/dobry-implantolog-warszawa/</code></td></tr>
+      </table>
+      <a class="download-btn" id="csvDownloadLink" download="implanty_skag_landing_pages_dla_webmastera.csv">⬇ Pobierz CSV</a>
+    </div>
+
+    <div class="panel">
+      <h2>Quality Score — Implanty (w czasie)</h2>
+      <div id="qsChartContainer"></div>
+    </div>
+
+    <div class="warning-banner">
+      <b>Uwaga:</b> kampania brandowa (MG_gsn_brand_supradent) jest obecnie najbardziej efektywną
+      kampanią na koncie (18.9 konwersji / 123 PLN, ~6.5 PLN za konwersję) i w pełnym planie wpada do puli
+      "pozostałe 500 zł" — jej budżet spadłby z ok. 122 do 68 PLN/mies. Ta zmiana NIE została jeszcze
+      wdrożona ani potwierdzona.
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><span class="dot" style="background:var(--new)"></span> Nowa kampania/grupa</div>
+      <div class="legend-item"><span class="dot" style="background:var(--keep)"></span> Bez zmian</div>
+      <div class="legend-item"><span class="dot" style="background:var(--dedup)"></span> Odchudzona z duplikatów</div>
+      <div class="legend-item"><span class="dot" style="background:var(--pause)"></span> Do zapauzowania</div>
+      <div class="legend-item"><span class="dot" style="background:var(--untouched)"></span> Poza zakresem</div>
+    </div>
+
+    <div id="summary" class="summary-bar"></div>
+
+    <div class="section-title">Kampanie w planie</div>
+    <div class="board" id="board"></div>
+
+    <div class="section-title">Do zapauzowania (kampanie źródłowe po migracji)</div>
+    <div class="board" id="pauseBoard"></div>
+
+    <div class="section-title">Poza zakresem tej zmiany</div>
+    <div class="board" id="untouchedBoard"></div>
+
+  </div>
+
+  <div id="medView" class="view">
+    <div class="med-placeholder">
+      Sekcja Med (supramed.pl) — przygotujemy w kolejnym etapie.
+    </div>
+  </div>
+
+</div>
+
+<script>
+const CORRECT_PASSWORD = "supra2026";
+
+function checkPassword() {
+  const val = document.getElementById('pwInput').value;
+  if (val === CORRECT_PASSWORD) {
+    sessionStorage.setItem('supra_auth', '1');
+    showApp();
+  } else {
+    document.getElementById('loginError').textContent = 'Błędne hasło';
+  }
+}
+
+function showApp() {
+  document.getElementById('loginGate').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+  renderApp();
+}
+
+function switchTab(tab) {
+  document.getElementById('dentView').classList.toggle('active', tab === 'dent');
+  document.getElementById('medView').classList.toggle('active', tab === 'med');
+  document.getElementById('tabDentBtn').classList.toggle('active', tab === 'dent');
+  document.getElementById('tabMedBtn').classList.toggle('active', tab === 'med');
+}
+
+if (sessionStorage.getItem('supra_auth') === '1') {
+  showApp();
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function renderApp() {
+  renderQsChart();
+  renderCsvDownload();
+  renderPlan();
+}
+
+/* ---- QS chart (Implanty only) ---- */
+function renderQsChart() {
+  const QS = {"dates": [], "values": []};
+  const container = document.getElementById('qsChartContainer');
+  if (!QS.dates.length) {
+    container.innerHTML = '<div class="qs-empty">Kampania Implanty jest nowa i jeszcze PAUSED — Google nie wyliczył jeszcze Quality Score dla żadnej frazy (potrzebuje realnych wyświetleń). Wykres pojawi się automatycznie, gdy zbierzemy pierwsze dane po uruchomieniu kampanii.</div>';
+    return;
+  }
+  container.innerHTML = '<canvas id="qsCanvas" width="1000" height="280" style="width:100%; max-width:1000px; height:280px;"></canvas>';
+  const canvas = document.getElementById('qsCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const padL = 40, padR = 20, padT = 20, padB = 40;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle = '#d0d7de';
+  ctx.fillStyle = '#57606a';
+  ctx.font = '11px -apple-system, sans-serif';
+  ctx.beginPath();
+  for (let qs = 0; qs <= 10; qs += 2) {
+    const y = padT + plotH - (qs/10)*plotH;
+    ctx.moveTo(padL, y);
+    ctx.lineTo(W - padR, y);
+    ctx.fillText(qs, 8, y + 4);
+  }
+  ctx.stroke();
+  const n = QS.dates.length;
+  QS.dates.forEach((d, i) => {
+    const x = n > 1 ? padL + (i/(n-1))*plotW : padL + plotW/2;
+    ctx.fillText(d.slice(5), x - 15, H - 15);
+  });
+  ctx.strokeStyle = '#6639ba';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  let started = false;
+  QS.values.forEach((v, i) => {
+    if (v === null || v === undefined) return;
+    const x = n > 1 ? padL + (i/(n-1))*plotW : padL + plotW/2;
+    const y = padT + plotH - (v/10)*plotH;
+    if (!started) { ctx.moveTo(x, y); started = true; }
+    else { ctx.lineTo(x, y); }
+    ctx.fillStyle = '#6639ba';
+    ctx.fillRect(x-2, y-2, 4, 4);
+  });
+  ctx.stroke();
+}
+
+/* ---- CSV download ---- */
+function renderCsvDownload() {
+  const csvContent = "s\u0142owo kluczowe,tytu\u0142 LP (H1),url\nimplant z\u0119ba,implant z\u0119ba,/implant-zeba/\nimplanty z\u0119bowe,implanty z\u0119bowe,/implanty-zebowe/\nImplanty Warszawa,Implanty Warszawa,/implanty-warszawa/\nimplantolog warszawa,implantolog warszawa,/implantolog-warszawa/\nimplant z\u0119ba cena,implant z\u0119ba cena,/implant-zeba-cena/\nimplanty z\u0119bowe warszawa,implanty z\u0119bowe warszawa,/implanty-zebowe-warszawa/\nile kosztuje implant z\u0119ba,ile kosztuje implant z\u0119ba,/ile-kosztuje-implant-zeba/\ndobry implantolog warszawa,dobry implantolog warszawa,/dobry-implantolog-warszawa/\n";
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  document.getElementById('csvDownloadLink').href = url;
+}
+
+/* ---- Restructuring plan cards ---- */
+const PLAN = {"campaigns": [{"name": "Narkozy", "status": "NEW", "budget_month_pln": 625, "budget_day_pln": 21, "note": "Nowa kampania. Słowa przeniesione z ad group 'Leczenie zębów pod narkozą' w MG_GSN_Lecznie zębów pod narkozą (kampania źródłowa zostanie zapauzowana).", "ad_groups": [{"name": "Leczenie zębów pod narkozą", "status": "NEW", "keywords": [{"text": "leczenie zębów pod narkozą", "match_type": "EXACT"}, {"text": "leczenie zębów pod narkozą cena", "match_type": "PHRASE"}, {"text": "leczenie zębów pod narkozą u dzieci", "match_type": "EXACT"}, {"text": "leczenie zębów pod narkozą warszawa", "match_type": "EXACT"}, {"text": "usuwanie zębów pod narkozą warszawa", "match_type": "EXACT"}, {"text": "leczenie zębów pod narkozą nfz", "match_type": "BROAD"}, {"text": "leczenie zębów pod narkozą cennik warszawa", "match_type": "BROAD"}, {"text": "leczenie stomatologiczne w narkozie", "match_type": "EXACT"}, {"text": "ile kosztuje leczenie zębów pod narkozą warszawa", "match_type": "PHRASE"}, {"text": "leczenie zębów mlecznych pod narkozą", "match_type": "EXACT"}, {"text": "leczenie zębów pod narkozą opinie", "match_type": "EXACT"}, {"text": "leczenie zębów pod narkozą warszawa mokotów", "match_type": "PHRASE"}, {"text": "ile kosztuje leczenie zębów pod narkozą u dzieci", "match_type": "BROAD"}, {"text": "leczenie i wyrywanie zębów pod narkozą", "match_type": "BROAD"}, {"text": "leczenie zebow pod narkoza gdzie", "match_type": "BROAD"}, {"text": "leczenie zębów dzieci pod narkozą opinie", "match_type": "BROAD"}, {"text": "leczenie zębów pod narkozą dla dzieci", "match_type": "BROAD"}, {"text": "leczenie zębów pod narkozą dzieci warszawa", "match_type": "BROAD"}, {"text": "leczenie zębów pod narkozą jak wygląda", "match_type": "BROAD"}, {"text": "leczenie zębów pod narkozą u małych dzieci", "match_type": "BROAD"}, {"text": "leczenie zębów pod narkozą warszawa forum", "match_type": "BROAD"}, {"text": "leczenie zębów pod narkozą nowy zjazd", "match_type": "PHRASE"}, {"text": "Narkoza u dentysty", "match_type": "EXACT"}, {"text": "leczenie stomatologiczne w znieczuleniu ogólnym", "match_type": "EXACT"}, {"text": "leczenie zębów pod narkozą warszawa opinie", "match_type": "EXACT"}, {"text": "usuwanie i leczenie zebow pod narkoza", "match_type": "EXACT"}, {"text": "centrum leczenia w narkozie", "match_type": "EXACT"}, {"text": "leczenie zębów pod narkozą mazowieckie", "match_type": "EXACT"}]}]}, {"name": "Narkozy dla dzieci", "status": "NEW", "budget_month_pln": 625, "budget_day_pln": 21, "note": "Nowa kampania. Słowa przeniesione z ad group 'Leczenie zębów pod narkozą dzieci' w MG_GSN_Lecznie zębów pod narkozą.", "ad_groups": [{"name": "Leczenie zębów pod narkozą dzieci", "status": "NEW", "keywords": [{"text": "opieka anestezjologa stomatologia dziecięca warszawa", "match_type": "PHRASE"}, {"text": "stomatolog dziecięcy warszawa narkoza opinie", "match_type": "PHRASE"}, {"text": "dentysta dziecięcy z narkozą warszawa", "match_type": "PHRASE"}, {"text": "kompleksowe leczenie zębów u dzieci warszawa narkoza", "match_type": "PHRASE"}, {"text": "dentysta dla dzieci narkoza warszawa", "match_type": "PHRASE"}, {"text": "bezpieczna narkoza u dentysty dla dzieci warszawa", "match_type": "PHRASE"}, {"text": "klinika stomatologiczna narkoza dla dzieci warszawa", "match_type": "PHRASE"}, {"text": "leczenie stomatologiczne w uśpieniu warszawa", "match_type": "PHRASE"}, {"text": "zabiegi stomatologiczne w narkozie dzieci warszawa", "match_type": "PHRASE"}, {"text": "stomatologia dziecięca narkoza warszawa", "match_type": "PHRASE"}, {"text": "leczenie zębów u dzieci w narkozie warszawa", "match_type": "PHRASE"}, {"text": "stomatolog dziecięcy narkoza warszawa", "match_type": "PHRASE"}, {"text": "Leczenie stomatologiczne dzieci pod narkozą", "match_type": "EXACT"}]}]}, {"name": "Implanty", "status": "NEW", "budget_month_pln": 625, "budget_day_pln": 21, "note": "Nowa kampania SKAG. Słowa skonsolidowane z 'Grupa reklam 1' i 'Implanty zębowe' w MG_GSN_Chirurgia stomatologiczna (te ad groupy miały prawie zerowy ruch - łącznie tylko 13.55 PLN kosztu, 0 konwersji - bezpieczne do przeniesienia). 8 głównych fraz dostaje własną grupę reklam (SKAG) + dedykowany landing page (noindex, H1 = dokładne słowo kluczowe). Reszta fraz w jednej grupie ogólnej.", "ad_groups": [{"name": "[SKAG] implant zęba", "status": "NEW", "keywords": [{"text": "implant zęba", "match_type": "EXACT"}], "landing_page_url": "/implant-zeba/", "landing_page_title_h1": "implant zęba", "landing_page_noindex": true, "ad_headlines": ["implant zęba", "5 gwiazdek na Znanym Lekarzu", "Oceniani na 5/5 - ZnanyLekarz", "Implant zębowy od 2900 zł"]}, {"name": "[SKAG] implanty zębowe", "status": "NEW", "keywords": [{"text": "implanty zębowe", "match_type": "EXACT"}], "landing_page_url": "/implanty-zebowe/", "landing_page_title_h1": "implanty zębowe", "landing_page_noindex": true, "ad_headlines": ["implanty zębowe", "5 gwiazdek na Znanym Lekarzu", "Oceniani na 5/5 - ZnanyLekarz", "Implant zębowy od 2900 zł"]}, {"name": "[SKAG] Implanty Warszawa", "status": "NEW", "keywords": [{"text": "Implanty Warszawa", "match_type": "EXACT"}], "landing_page_url": "/implanty-warszawa/", "landing_page_title_h1": "Implanty Warszawa", "landing_page_noindex": true, "ad_headlines": ["Implanty Warszawa", "5 gwiazdek na Znanym Lekarzu", "Oceniani na 5/5 - ZnanyLekarz", "Implant zębowy od 2900 zł"]}, {"name": "[SKAG] implantolog warszawa", "status": "NEW", "keywords": [{"text": "implantolog warszawa", "match_type": "EXACT"}], "landing_page_url": "/implantolog-warszawa/", "landing_page_title_h1": "implantolog warszawa", "landing_page_noindex": true, "ad_headlines": ["implantolog warszawa", "5 gwiazdek na Znanym Lekarzu", "Oceniani na 5/5 - ZnanyLekarz", "Implant zębowy od 2900 zł"]}, {"name": "[SKAG] implant zęba cena", "status": "NEW", "keywords": [{"text": "implant zęba cena", "match_type": "EXACT"}], "landing_page_url": "/implant-zeba-cena/", "landing_page_title_h1": "implant zęba cena", "landing_page_noindex": true, "ad_headlines": ["implant zęba cena", "5 gwiazdek na Znanym Lekarzu", "Oceniani na 5/5 - ZnanyLekarz", "Implant zębowy od 2900 zł"]}, {"name": "[SKAG] implanty zębowe warszawa", "status": "NEW", "keywords": [{"text": "implanty zębowe warszawa", "match_type": "EXACT"}], "landing_page_url": "/implanty-zebowe-warszawa/", "landing_page_title_h1": "implanty zębowe warszawa", "landing_page_noindex": true, "ad_headlines": ["implanty zębowe warszawa", "5 gwiazdek na Znanym Lekarzu", "Oceniani na 5/5 - ZnanyLekarz", "Implant zębowy od 2900 zł"]}, {"name": "[SKAG] ile kosztuje implant zęba", "status": "NEW", "keywords": [{"text": "ile kosztuje implant zęba", "match_type": "EXACT"}], "landing_page_url": "/ile-kosztuje-implant-zeba/", "landing_page_title_h1": "ile kosztuje implant zęba", "landing_page_noindex": true, "ad_headlines": ["ile kosztuje implant zęba", "5 gwiazdek na Znanym Lekarzu", "Oceniani na 5/5 - ZnanyLekarz", "Implant zębowy od 2900 zł"]}, {"name": "[SKAG] dobry implantolog warszawa", "status": "NEW", "keywords": [{"text": "dobry implantolog warszawa", "match_type": "EXACT"}], "landing_page_url": "/dobry-implantolog-warszawa/", "landing_page_title_h1": "dobry implantolog warszawa", "landing_page_noindex": true, "ad_headlines": ["dobry implantolog warszawa", "5 gwiazdek na Znanym Lekarzu", "Oceniani na 5/5 - ZnanyLekarz", "Implant zębowy od 2900 zł"]}, {"name": "Implanty - pozostałe", "status": "NEW", "keywords": [{"text": "implanty stomatologiczne", "match_type": "BROAD"}, {"text": "implant zębowy", "match_type": "BROAD"}, {"text": "chirurgia stomatologiczna warszawa", "match_type": "BROAD"}, {"text": "leczenie implantologiczne", "match_type": "BROAD"}, {"text": "implant zębowy koszt", "match_type": "BROAD"}, {"text": "implanty mokotów", "match_type": "EXACT"}, {"text": "implanty zębowe mokotów", "match_type": "EXACT"}, {"text": "implanty stomatologiczne warszawa", "match_type": "BROAD"}, {"text": "brak zęba implant", "match_type": "BROAD"}, {"text": "chirurgia implantologiczna", "match_type": "EXACT"}, {"text": "implant jednego zęba", "match_type": "BROAD"}, {"text": "wstawienie zęba implant", "match_type": "BROAD"}, {"text": "rekonstrukcja zęba implant", "match_type": "BROAD"}, {"text": "wycena implantów zębowych", "match_type": "EXACT"}, {"text": "implanty zębów cena warszawa", "match_type": "PHRASE"}, {"text": "implanty w jeden dzień warszawa", "match_type": "EXACT"}, {"text": "implanty zębów mokotów", "match_type": "PHRASE"}, {"text": "implanty zębowe ursynów", "match_type": "PHRASE"}, {"text": "nowoczesne implanty zębowe", "match_type": "PHRASE"}, {"text": "klinika implantologii warszawa", "match_type": "EXACT"}, {"text": "wszczepienie implantu warszawa", "match_type": "EXACT"}, {"text": "implantologia warszawa wola", "match_type": "PHRASE"}, {"text": "implanty zębów bemowo", "match_type": "PHRASE"}, {"text": "implant zęba jedynka cena", "match_type": "PHRASE"}, {"text": "implanty zębowe białołęka", "match_type": "PHRASE"}, {"text": "konsultacja implantologiczna warszawa", "match_type": "EXACT"}, {"text": "implany zębowe", "match_type": "EXACT"}, {"text": "implanty zębowe kompletna cena", "match_type": "PHRASE"}, {"text": "chirurg stomatolog warszawa implanty", "match_type": "PHRASE"}, {"text": "chirurg szczękowy warszawa implanty", "match_type": "PHRASE"}, {"text": "brak pojedynczego zęba implant", "match_type": "PHRASE"}, {"text": "najlepszy implantolog opinie", "match_type": "EXACT"}], "note": "Pozostałe słowa implantowe (poza pilotażem SKAG), zwykła grupa reklam kierująca na ogólną stronę /implanty/ (bez dedykowanego LP per słowo).", "landing_page_url": "/implanty/"}]}, {"name": "MG_GSN_Ortodoncja", "status": "KEEP (budget zmieniony)", "budget_month_pln": 625, "budget_day_pln": 21, "note": "Struktura bez zmian poza usunięciem 1 błędnego wpisu w Kortykomii. Budżet rośnie z ok. 183 PLN/mies do 625 PLN/mies.", "ad_groups": [{"name": "Aparat estetyczny", "status": "KEEP", "keywords": [{"text": "aparat ortodontyczny estetyczny cena", "match_type": "PHRASE"}, {"text": "aparat ortodontyczny szafirowy", "match_type": "EXACT"}, {"text": "aparat szafirowy cena", "match_type": "EXACT"}, {"text": "estetyczny aparat na zęby", "match_type": "EXACT"}, {"text": "aparat ceramiczny cena warszawa", "match_type": "EXACT"}, {"text": "aparat estetyczny warszawa", "match_type": "EXACT"}, {"text": "aparat porcelanowy warszawa", "match_type": "EXACT"}, {"text": "aparat kryształowy warszawa", "match_type": "EXACT"}, {"text": "aparat estetyczny stały", "match_type": "EXACT"}, {"text": "aparat porcelanowy czy kryształowy", "match_type": "EXACT"}, {"text": "aparat estetyczny cena warszawa", "match_type": "EXACT"}, {"text": "biały aparat na zęby warszawa", "match_type": "EXACT"}, {"text": "aparat stały mało widoczny", "match_type": "EXACT"}, {"text": "dyskretny aparat stały warszawa", "match_type": "EXACT"}, {"text": "zakładanie aparatu estetycznego", "match_type": "EXACT"}, {"text": "przezroczysty aparat stały cena", "match_type": "EXACT"}, {"text": "aparat z zamkami szafirowymi", "match_type": "EXACT"}], "note": null}, {"name": "Aparat nakładkowy", "status": "KEEP", "keywords": [{"text": "przezroczysty aparat na zęby cena", "match_type": "EXACT"}, {"text": "aparat nakładkowy", "match_type": "EXACT"}, {"text": "nakładki na zęby zamiast aparatu", "match_type": "EXACT"}, {"text": "aparat ortodontyczny nakładkowy", "match_type": "EXACT"}, {"text": "niewidoczne nakładki ortodontyczne", "match_type": "PHRASE"}, {"text": "dyskretny aparat ortodontyczny", "match_type": "EXACT"}, {"text": "aparaty nakładkowe cena", "match_type": "EXACT"}, {"text": "aparat nakładkowy warszawa", "match_type": "EXACT"}, {"text": "prostowanie zębów nakładkami cena", "match_type": "EXACT"}, {"text": "nakładki prostujące zęby warszawa", "match_type": "EXACT"}, {"text": "niewidoczny aparat na zęby warszawa", "match_type": "EXACT"}, {"text": "szyny prostujące zęby cena", "match_type": "EXACT"}, {"text": "Leczenie nakładokowe Warszawa", "match_type": "EXACT"}, {"text": "aparat na zęby niewidoczny gołym okiem", "match_type": "EXACT"}], "note": null}, {"name": "Aparat ortodontyczny", "status": "KEEP", "keywords": [{"text": "aparat ortodontyczny", "match_type": "EXACT"}, {"text": "aparat na zęby", "match_type": "EXACT"}, {"text": "aparat ortodontyczny warszawa", "match_type": "EXACT"}, {"text": "aparat ortodontyczny kryształowy", "match_type": "EXACT"}, {"text": "aparat ortodontyczny stały", "match_type": "EXACT"}, {"text": "aparat ortodontyczny dla dorosłych", "match_type": "PHRASE"}, {"text": "aparat ortodontyczny porcelanowy", "match_type": "EXACT"}, {"text": "aparat ortodontyczny metalowy cena", "match_type": "PHRASE"}, {"text": "aparat na zęby warszawa cena", "match_type": "EXACT"}, {"text": "lekarz ortodonta warszawa", "match_type": "EXACT"}, {"text": "tani aparat ortodontyczny warszawa", "match_type": "EXACT"}, {"text": "aparat ortodontyczny ursynów", "match_type": "PHRASE"}, {"text": "aparat ortodontyczny bemowo", "match_type": "PHRASE"}, {"text": "aparat ortodontyczny wola", "match_type": "PHRASE"}, {"text": "aparat ortodontyczny białołęka", "match_type": "PHRASE"}, {"text": "aparat ortodontyczny mokotów", "match_type": "EXACT"}, {"text": "ortodonta warszawa prywatnie", "match_type": "PHRASE"}, {"text": "dobry ortodontysta warszawa", "match_type": "EXACT"}, {"text": "ile kosztuje aparat ortodontyczny warszawa", "match_type": "EXACT"}, {"text": "aparat ortodontyczny centrum", "match_type": "PHRASE"}, {"text": "aparat ortodontyczny cena za oba łuki", "match_type": "PHRASE"}, {"text": "aparat na zęby u kogo warszawa", "match_type": "EXACT"}, {"text": "najlepszy ortodonta warszawa opinie", "match_type": "EXACT"}, {"text": "zakładanie aparatu ortodontycznego warszawa", "match_type": "EXACT"}, {"text": "aparat ortodontyczny dla dzieci warszawa", "match_type": "EXACT"}], "note": null}, {"name": "Kortykomia", "status": "KEEP", "keywords": [{"text": "kortykotomia warszawa", "match_type": "EXACT"}, {"text": "aparat ortodontyczny krótszy czas leczenia", "match_type": "PHRASE"}, {"text": "chirurg stomatolog kortykotomia warszawa", "match_type": "PHRASE"}, {"text": "kortykotomia stomatologiczna warszawa", "match_type": "EXACT"}, {"text": "kortykotomia ortodontyczna cena", "match_type": "EXACT"}, {"text": "kortykotomia piezosurgery cena", "match_type": "EXACT"}, {"text": "kortykotomia warszawa mokotów", "match_type": "EXACT"}, {"text": "kortykotomia laserowa warszawa", "match_type": "EXACT"}, {"text": "szybsze prostowanie zębów warszawa", "match_type": "EXACT"}, {"text": "kortykotomia warszawa bemowo", "match_type": "EXACT"}, {"text": "jak przyspieszyć leczenie ortodontyczne", "match_type": "PHRASE"}, {"text": "przyspieszanie aparatu ortodontycznego cena", "match_type": "EXACT"}, {"text": "zabieg kortykotomii cena", "match_type": "EXACT"}, {"text": "kortykotomia opinie warszawa", "match_type": "EXACT"}], "note": "Usunięto błędny wpis (wyciek z promptu AI)"}, {"name": "Ortodonta - single", "status": "KEEP", "keywords": [{"text": "ortodonta", "match_type": "PHRASE"}, {"text": "Ortodoncja Warszawa", "match_type": "EXACT"}, {"text": "ortodoncja", "match_type": "EXACT"}, {"text": "Ortodonta Mokotów", "match_type": "EXACT"}, {"text": "Dobry Ortodonta Warszawa", "match_type": "EXACT"}, {"text": "Ortodoncja Mokotów", "match_type": "EXACT"}], "note": null}, {"name": "Ortodonta dla dzieci", "status": "KEEP", "keywords": [{"text": "ortodonta dla dzieci warszawa", "match_type": "EXACT"}, {"text": "ortodonta dla dzieci mokotów", "match_type": "EXACT"}, {"text": "aparat ortodontyczny dla dzieci cena", "match_type": "EXACT"}, {"text": "dobry ortodonta dziecięcy warszawa", "match_type": "EXACT"}, {"text": "ortodonta dla dzieci ursynów", "match_type": "EXACT"}, {"text": "ortodonta dziecięcy białołęka", "match_type": "PHRASE"}, {"text": "aparat stały dla dzieci cena", "match_type": "EXACT"}, {"text": "kiedy z dzieckiem do ortodonty", "match_type": "EXACT"}, {"text": "ortodoncja dziecięca warszawa", "match_type": "EXACT"}, {"text": "aparat na zęby dla 7 latka", "match_type": "EXACT"}, {"text": "ortodonta dla dzieci wola", "match_type": "EXACT"}, {"text": "aparat ruchomy dla dzieci warszawa", "match_type": "EXACT"}, {"text": "pierwsza wizyta u ortodonty z dzieckiem", "match_type": "PHRASE"}, {"text": "polecany ortodonta dla dzieci warszawa", "match_type": "EXACT"}, {"text": "ranking ortodontów dziecięcych warszawa", "match_type": "EXACT"}, {"text": "leczenie wad zgryzu u dzieci warszawa", "match_type": "EXACT"}, {"text": "kolorowy aparat na zęby dla dzieci", "match_type": "EXACT"}, {"text": "ortodonta dla dzieci bemowo", "match_type": "EXACT"}, {"text": "ortodonta dziecięcy prywatnie warszawa", "match_type": "PHRASE"}, {"text": "stomatolog dziecięcy ortodonta warszawa", "match_type": "PHRASE"}, {"text": "najlepszy ortodonta dziecięcy opinie", "match_type": "PHRASE"}], "note": null}]}, {"name": "MG_GSN_Chirurgia stomatologiczna", "status": "KEEP (zmniejszona)", "budget_month_pln": 133, "budget_day_pln": 4, "note": "Usunięto 'Grupa reklam 1' i 'Implanty zębowe' (przeniesione do kampanii Implanty). Zostaje tylko 'Chirurgia - Ogólna', która generowała 227 z 241 PLN kosztu tej kampanii i wszystkie jej konwersje - nic nie tracimy.", "ad_groups": [{"name": "Chirurgia - Ogólna", "status": "KEEP", "keywords": [{"text": "chirurgia stomatologiczna warszawa", "match_type": "PHRASE"}, {"text": "chirurg szczękowy warszawa", "match_type": "EXACT"}, {"text": "usuwanie ósemek warszawa", "match_type": "EXACT"}, {"text": "chirurg stomatolog warszawa", "match_type": "PHRASE"}, {"text": "chirurg dentysta warszawa", "match_type": "PHRASE"}, {"text": "chirurgiczne usuwanie zęba cena", "match_type": "EXACT"}, {"text": "usuwanie zęba mądrości cena", "match_type": "EXACT"}, {"text": "podniesienie dna zatoki szczękowej", "match_type": "EXACT"}, {"text": "usuwanie torbieli zęba", "match_type": "EXACT"}, {"text": "chirurg stomatolog warszawa ursynów", "match_type": "PHRASE"}, {"text": "chirurg stomatolog warszawa wola", "match_type": "PHRASE"}, {"text": "wyrywanie ósemki warszawa", "match_type": "EXACT"}, {"text": "ekstrakcja zęba chirurgiczna", "match_type": "EXACT"}, {"text": "chirurg stomatolog warszawa bemowo", "match_type": "PHRASE"}, {"text": "resekcja wierzchołka korzenia warszawa", "match_type": "EXACT"}, {"text": "dobry chirurg stomatolog opinie", "match_type": "PHRASE"}, {"text": "prywatny chirurg stomatolog warszawa", "match_type": "PHRASE"}, {"text": "chirurg stomatolog warszawa mokotów", "match_type": "PHRASE"}, {"text": "chirurg stomatolog warszawa od zaraz", "match_type": "PHRASE"}, {"text": "chirurg stomatolog warszawa pomoc doraźna", "match_type": "PHRASE"}, {"text": "plastyka dziąsła warszawa", "match_type": "EXACT"}, {"text": "odsłonięcie zęba zatrzymanego cena", "match_type": "EXACT"}, {"text": "chirurgiczne wycinanie ósemki", "match_type": "EXACT"}]}]}, {"name": "MG_GSN_Diagnostyka i leczenie specjalistyczne", "status": "KEEP (odchudzona z duplikatów)", "budget_month_pln": 149, "budget_day_pln": 5, "note": "Usunięto 5 grup reklam (All on X, Korony, Licówki, Mosty, Prace pełnołukowe) - to były 1:1 duplikaty tych samych grup w MG_GSN_Protetyka, z zerowym kosztem/ruchem w Diagnostyce (cały historyczny koszt i tak pochodził z 2 poniższych grup). Usunięto też zduplikowaną grupę 'Badanie Modjaw... #3' (identyczna z pierwszą).", "ad_groups": [{"name": "Badanie Modjaw – diagnostyka bruksizmu", "status": "KEEP", "keywords": [{"text": "zaciskanie zębów leczenie", "match_type": "PHRASE"}, {"text": "bruksizm", "match_type": "EXACT"}, {"text": "szyna relaksacyjna warszawa", "match_type": "EXACT"}, {"text": "leczenie bruksizmu warszawa", "match_type": "EXACT"}, {"text": "ból stawów skroniowo żuchwowych", "match_type": "EXACT"}, {"text": "fizjoterapia stomatologiczna warszawa", "match_type": "PHRASE"}, {"text": "modjaw", "match_type": "EXACT"}, {"text": "zgrzytanie zębami diagnostyka", "match_type": "EXACT"}, {"text": "diagnostyka zgryzu warszawa centrum", "match_type": "EXACT"}, {"text": "dlaczego ścieram zęby", "match_type": "EXACT"}, {"text": "strzelanie w żuchwie leczenie", "match_type": "EXACT"}, {"text": "leczenie bruksizmu mokotów", "match_type": "EXACT"}, {"text": "badanie stawów żuchwy wola", "match_type": "EXACT"}, {"text": "diagnostyka bruksizmu cena", "match_type": "EXACT"}, {"text": "cyfrowa analiza zgryzu modjaw", "match_type": "EXACT"}, {"text": "badanie stawów żuchwy cena", "match_type": "EXACT"}, {"text": "modjaw badanie zgryzu", "match_type": "EXACT"}, {"text": "system modjaw cena", "match_type": "EXACT"}, {"text": "diagnostyka okluzji warszawa", "match_type": "EXACT"}, {"text": "badanie modjaw warszawa", "match_type": "EXACT"}, {"text": "starcie zębów u kogo leczyć", "match_type": "EXACT"}, {"text": "stomatolog bemowo bruksizm", "match_type": "PHRASE"}, {"text": "diagnostyka modjaw stomatologia", "match_type": "EXACT"}]}, {"name": "Leczenie zaburzeń stawów skroniowo-żuchwowych", "status": "KEEP", "keywords": [{"text": "leczenie stawów skroniowo żuchwowych", "match_type": "EXACT"}, {"text": "fizjoterapeuta stomatologiczny warszawa", "match_type": "EXACT"}, {"text": "specjalista od stawów skroniowo żuchwowych warszawa", "match_type": "EXACT"}, {"text": "przeskakiwanie żuchwy leczenie", "match_type": "EXACT"}, {"text": "diagnostyka czynnościowa stawów żuchwy", "match_type": "EXACT"}, {"text": "deprogramacja koisa warszawa", "match_type": "EXACT"}, {"text": "blokowanie szczęki przy jedzeniu", "match_type": "EXACT"}, {"text": "szyna mitygacyjna cena warszawa", "match_type": "EXACT"}, {"text": "specjalista od żuchwy warszawa centrum", "match_type": "EXACT"}, {"text": "klinika stawów skroniowo żuchwowych", "match_type": "EXACT"}, {"text": "szynoterapia stawów skroniowo żuchwowych", "match_type": "EXACT"}, {"text": "zapalenie stawu skroniowo żuchwowego warszawa", "match_type": "EXACT"}, {"text": "klinika stomatologiczna wola stawy", "match_type": "PHRASE"}, {"text": "strzelanie w żuchwie u kogo leczyć", "match_type": "EXACT"}, {"text": "ból przy otwieraniu ust warszawa", "match_type": "EXACT"}, {"text": "dysfunkcje stawów skroniowo żuchwowych leczenie", "match_type": "EXACT"}, {"text": "ból szczęki przy uchu warszawa", "match_type": "EXACT"}, {"text": "trzeszczenie w stawie żuchwowym", "match_type": "EXACT"}, {"text": "leczenie stawów żuchwy mokotów", "match_type": "EXACT"}, {"text": "leczenie bruksizmu i stawów bemowo", "match_type": "EXACT"}]}]}, {"name": "MG_GSN_Protetyka", "status": "KEEP (odchudzona z duplikatu)", "budget_month_pln": 150, "budget_day_pln": 5, "note": "Usunięto grupę 'Protetyka - [cennik/cena]' - była identyczna (te same 37 słów) co grupa 'Protetyka'; obie działały niezależnie i konkurowały same ze sobą w aukcji. Zostaje jedna grupa z pełną historią.", "ad_groups": [{"name": "All on X", "status": "KEEP", "keywords": [{"text": "all on 4", "match_type": "EXACT"}, {"text": "all on 6", "match_type": "EXACT"}, {"text": "all on 4 warszawa", "match_type": "PHRASE"}, {"text": "zęby w jeden dzień warszawa", "match_type": "EXACT"}, {"text": "implanty zębów w jeden dzień warszawa", "match_type": "PHRASE"}, {"text": "proteza na 4 implantach cena", "match_type": "EXACT"}, {"text": "metoda all on 4 cena", "match_type": "PHRASE"}, {"text": "all on x", "match_type": "EXACT"}, {"text": "All-on-6", "match_type": "EXACT"}, {"text": "implanty cała szczęka cena warszawa", "match_type": "EXACT"}, {"text": "all on 6 warszawa", "match_type": "EXACT"}, {"text": "implanty all on 4 warszawa", "match_type": "PHRASE"}, {"text": "all on 4 zęby cena warszawa", "match_type": "PHRASE"}, {"text": "system all on 4 warszawa", "match_type": "PHRASE"}, {"text": "uśmiech w jeden dzień cena", "match_type": "PHRASE"}, {"text": "proteza stała na implantach warszawa", "match_type": "PHRASE"}, {"text": "nowe zęby na implantach warszawa", "match_type": "PHRASE"}, {"text": "all on 6 cena warszawa", "match_type": "EXACT"}, {"text": "całkowita odbudowa szczęki cena", "match_type": "EXACT"}, {"text": "pełna odbudowa zębów w jeden dzień", "match_type": "EXACT"}, {"text": "nowe zęby w 24h warszawa", "match_type": "EXACT"}, {"text": "All-on-6 Warszawa", "match_type": "EXACT"}, {"text": "metoda zęby w jeden dzień opinie", "match_type": "EXACT"}, {"text": "All-on-4 Warszawa", "match_type": "EXACT"}]}, {"name": "Korony", "status": "KEEP", "keywords": [{"text": "korony zębowe", "match_type": "EXACT"}, {"text": "korony porcelanowe warszawa", "match_type": "EXACT"}, {"text": "korony cyrkonowe warszawa", "match_type": "EXACT"}, {"text": "protetyka korony warszawa", "match_type": "EXACT"}, {"text": "odbudowa zęba na korzeniu cena", "match_type": "EXACT"}, {"text": "korona pełnoceramiczna cena warszawa", "match_type": "EXACT"}, {"text": "korony cyrkonowe cena", "match_type": "EXACT"}, {"text": "korony zębowe cena warszawa", "match_type": "EXACT"}, {"text": "korony zębowe warszawa", "match_type": "EXACT"}, {"text": "korona na implancie warszawa", "match_type": "EXACT"}, {"text": "korona porcelanowa na metalu warszawa", "match_type": "EXACT"}, {"text": "zrobienie korony na zębie warszawa", "match_type": "EXACT"}, {"text": "korona tymczasowa na ząb warszawa", "match_type": "EXACT"}, {"text": "dobry protetyk warszawa korony", "match_type": "EXACT"}, {"text": "najlepsze korony zębowe warszawa", "match_type": "EXACT"}, {"text": "korona na ząb cena warszawa", "match_type": "EXACT"}, {"text": "wymiana korony zębowej warszawa", "match_type": "EXACT"}, {"text": "wytrzymałe korony zębowe warszawa", "match_type": "EXACT"}, {"text": "klinika protetyki warszawa korony", "match_type": "EXACT"}]}, {"name": "Licówki", "status": "KEEP", "keywords": [{"text": "stomatologia estetyczna warszawa", "match_type": "EXACT"}, {"text": "licówki porcelanowe warszawa", "match_type": "EXACT"}, {"text": "licówki warszawa", "match_type": "EXACT"}, {"text": "licówki kompozytowe cena", "match_type": "EXACT"}, {"text": "licówki kompozytowe warszawa", "match_type": "EXACT"}, {"text": "licówki bez szlifowania warszawa", "match_type": "EXACT"}, {"text": "licówki na krzywe zęby", "match_type": "EXACT"}, {"text": "licówki cena warszawa", "match_type": "EXACT"}, {"text": "licówki pełnoceramiczne warszawa", "match_type": "EXACT"}, {"text": "licówki przed i po warszawa", "match_type": "EXACT"}, {"text": "klinika licówki warszawa", "match_type": "EXACT"}, {"text": "najlepsze licówki warszawa", "match_type": "EXACT"}, {"text": "nakładki na zęby licówki warszawa", "match_type": "EXACT"}, {"text": "bonding czy licówki warszawa", "match_type": "EXACT"}, {"text": "uśmiech hollywood licówki", "match_type": "EXACT"}, {"text": "metamorfoza uśmiechu licówki warszawa", "match_type": "EXACT"}, {"text": "jak poprawić uśmiech licówki", "match_type": "EXACT"}, {"text": "licówki na przerwy między zębami", "match_type": "EXACT"}]}, {"name": "Mosty", "status": "KEEP", "keywords": [{"text": "mosty porcelanowe", "match_type": "EXACT"}, {"text": "mostek porcelanowy", "match_type": "EXACT"}, {"text": "most stomatologiczny", "match_type": "EXACT"}, {"text": "mosty protetyczne", "match_type": "EXACT"}, {"text": "most protetyczny", "match_type": "EXACT"}, {"text": "most adhezyjny warszawa", "match_type": "EXACT"}, {"text": "most zębowy", "match_type": "EXACT"}, {"text": "most protetyczny cena", "match_type": "EXACT"}, {"text": "most kompozytowy", "match_type": "EXACT"}, {"text": "mostek dentystyczny", "match_type": "EXACT"}, {"text": "mostek na zęby", "match_type": "EXACT"}, {"text": "mostek protetyczny", "match_type": "EXACT"}, {"text": "mostek zębowy", "match_type": "EXACT"}, {"text": "mostek zębowy cena", "match_type": "EXACT"}, {"text": "most stomatologiczny warszawa", "match_type": "EXACT"}, {"text": "most na implantach warszawa", "match_type": "EXACT"}, {"text": "most protetyczny cena warszawa", "match_type": "EXACT"}, {"text": "mosty zębowe warszawa", "match_type": "EXACT"}, {"text": "mosty pełnoceramiczne warszawa", "match_type": "EXACT"}, {"text": "naprawa mostu protetycznego warszawa", "match_type": "EXACT"}, {"text": "most zamiast implantu cena", "match_type": "EXACT"}, {"text": "most protetyczny porcelanowy", "match_type": "EXACT"}, {"text": "mostek zębowy cena warszawa", "match_type": "EXACT"}, {"text": "most na zębach warszawa", "match_type": "EXACT"}, {"text": "odbudowa trzech zębów warszawa", "match_type": "EXACT"}, {"text": "lekarz od mostów zębowych warszawa", "match_type": "EXACT"}, {"text": "jak uzupełnić brak kilku zębów", "match_type": "EXACT"}, {"text": "uzupełnienie braków zębowych mostem", "match_type": "EXACT"}, {"text": "most porcelanowy cena warszawa", "match_type": "EXACT"}, {"text": "klinika protetyki mosty warszawa", "match_type": "EXACT"}, {"text": "most cyrkonowy warszawa", "match_type": "EXACT"}]}, {"name": "Prace pełnołukowe", "status": "KEEP", "keywords": [{"text": "proteza elastyczna", "match_type": "EXACT"}, {"text": "wymiana wszystkich zębów na implanty", "match_type": "EXACT"}, {"text": "proteza akrylowa", "match_type": "EXACT"}, {"text": "naprawa protezy", "match_type": "EXACT"}, {"text": "trwałe zamocowanie protezy na implantach", "match_type": "PHRASE"}, {"text": "implanty cała dół zębów cena", "match_type": "PHRASE"}, {"text": "implanty cała góra zębów cena", "match_type": "EXACT"}, {"text": "rekonstrukcja całego uzębienia warszawa", "match_type": "EXACT"}, {"text": "protetyka pełnołukowa warszawa", "match_type": "EXACT"}, {"text": "odbudowa całej szczęki na implantach", "match_type": "EXACT"}, {"text": "prace pełnołukowe warszawa", "match_type": "EXACT"}, {"text": "pełnołukowa odbudowa zębów", "match_type": "EXACT"}, {"text": "pełnołukowa rekonstrukcja zgryzu", "match_type": "EXACT"}, {"text": "proteza stała cała szczęka warszawa", "match_type": "EXACT"}, {"text": "stałe zęby zamiast protezy warszawa", "match_type": "EXACT"}, {"text": "pełny łuk zębowy cena warszawa", "match_type": "EXACT"}, {"text": "most pełnołukowy na implantach", "match_type": "EXACT"}, {"text": "most zamiast protezy całkowitej", "match_type": "EXACT"}, {"text": "most protetyczny cały łuk cena", "match_type": "EXACT"}, {"text": "uzupełnienie pełnołukowe cena", "match_type": "EXACT"}, {"text": "prace pełnołukowe", "match_type": "EXACT"}]}, {"name": "Protetyka", "status": "KEEP", "keywords": [{"text": "protetyka stomatologiczna", "match_type": "EXACT"}, {"text": "proteza zębowa", "match_type": "EXACT"}, {"text": "protetyka stomatologiczna warszawa", "match_type": "EXACT"}, {"text": "protezy szkieletowe", "match_type": "EXACT"}, {"text": "protetyka warszawa", "match_type": "EXACT"}, {"text": "protezy dentystyczne", "match_type": "EXACT"}, {"text": "protetyka zębów", "match_type": "EXACT"}, {"text": "protetyk dentystyczny", "match_type": "EXACT"}, {"text": "protezy stomatologiczne", "match_type": "EXACT"}, {"text": "najlepsze protezy zębowe", "match_type": "EXACT"}, {"text": "protezy zębowe warszawa", "match_type": "EXACT"}, {"text": "stomatolog protetyk", "match_type": "EXACT"}, {"text": "dobry protetyk warszawa", "match_type": "EXACT"}, {"text": "protetyk stomatologiczny", "match_type": "EXACT"}, {"text": "proteza zębowa na implantach", "match_type": "EXACT"}, {"text": "protezy zębowe na implantach", "match_type": "EXACT"}, {"text": "nowoczesne protezy zębowe całkowite", "match_type": "EXACT"}, {"text": "protezy zębowe", "match_type": "EXACT"}, {"text": "leczenie protetyczne", "match_type": "EXACT"}, {"text": "proteza szkieletowa", "match_type": "EXACT"}, {"text": "protetyka na implantach", "match_type": "EXACT"}, {"text": "protezy zębowe cennik", "match_type": "EXACT"}, {"text": "cennik protez zębowych", "match_type": "EXACT"}, {"text": "proteza szkieletowa cennik", "match_type": "EXACT"}, {"text": "proteza zębowa cennik", "match_type": "EXACT"}, {"text": "nowoczesne protezy zębowe cena", "match_type": "EXACT"}, {"text": "sztuczne zęby na stałe", "match_type": "EXACT"}, {"text": "proteza akrylowa", "match_type": "EXACT"}, {"text": "proteza zębowa akrylowa", "match_type": "EXACT"}, {"text": "sztuczne zęby", "match_type": "EXACT"}, {"text": "usługi protetyczne", "match_type": "EXACT"}, {"text": "odbudowa zęba", "match_type": "EXACT"}, {"text": "odbudowa zeba", "match_type": "EXACT"}, {"text": "protezy bezklamrowe", "match_type": "EXACT"}, {"text": "protezy szkieletowe cena", "match_type": "EXACT"}, {"text": "protetyk ursynów", "match_type": "EXACT"}, {"text": "nowoczesne protezy zębowe całkowite cena", "match_type": "EXACT"}]}]}, {"name": "MG_gsn_brand_supradent", "status": "KEEP", "budget_month_pln": 68, "budget_day_pln": 2, "note": "UWAGA: to najbardziej efektywna kampania na koncie (18.9 konwersji za 123 PLN, ~6.5 PLN/konwersję) - obcięcie budżetu z ok. 122 do 68 PLN/mies w ramach puli 'pozostałe 500 zł' może zaszkodzić najlepiej działającej części konta. Do przemyślenia przed wdrożeniem.", "ad_groups": "bez zmian (nie pobrano szczegółów, nie modyfikujemy)"}], "untouched": [{"name": "MG_INT_www_Ortodonta Warszawa", "type": "Smart", "note": "Poza zakresem - 3 PLN/dzień, 34.5 konw/30dni, najbardziej efektywna kampania obok brandu."}, {"name": "MG_INT_www_Dentysta Warszawa", "type": "Smart", "note": "Poza zakresem - 3 PLN/dzień, 33 konw/30dni."}], "to_pause": [{"name": "MG_GSN_Lecznie zębów pod narkozą", "reason": "Podzielona na Narkozy + Narkozy dla dzieci, staje się pusta."}]};
+
+function statusClass(status) {
+  if (status.includes('NEW')) return 'status-NEW';
+  if (status.includes('odchudzon') || status.includes('zmniejszon')) return 'status-dedup';
+  if (status.includes('KEEP')) return 'status-KEEP';
+  return 'status-KEEP';
+}
+
+function renderKwList(keywords) {
+  return keywords.map(k => `<span title="${k.match_type}">${escapeHtml(k.text)}</span>`).join(' ');
+}
+
+function renderCard(camp) {
+  const ags = Array.isArray(camp.ad_groups) ? camp.ad_groups : null;
+  const totalKw = ags ? ags.reduce((a,ag)=>a+ag.keywords.length,0) : 0;
+  const budget = camp.budget_month_pln ? `${camp.budget_month_pln} PLN/mies (~${camp.budget_day_pln} PLN/dzień)` : '';
+
+  let agHtml = '';
+  if (ags) {
+    agHtml = ags.map(ag => `
+      <div class="ad-group">
+        <div class="ad-group-name">
+          <span>${escapeHtml(ag.name)}</span>
+          <span class="kw-count">${ag.keywords.length} słów</span>
+        </div>
+        ${ag.note ? `<div class="ag-note">${escapeHtml(ag.note)}</div>` : ''}
+        <div class="kw-list">${renderKwList(ag.keywords)}</div>
+        ${ag.landing_page_url ? `
+          <div class="lp-box">
+            <b>LP:</b> ${escapeHtml(ag.landing_page_url)}
+            ${ag.landing_page_title_h1 ? `<br><b>H1/title:</b> ${escapeHtml(ag.landing_page_title_h1)}` : ''}
+            ${ag.landing_page_noindex ? `<br><i>noindex</i>` : ''}
+            ${ag.ad_headlines ? `<div class="headline-list">${ag.ad_headlines.map(h=>`<span>${escapeHtml(h)}</span>`).join('')}</div>` : ''}
+          </div>` : ''}
+      </div>
+    `).join('');
+  } else if (typeof camp.ad_groups === 'string') {
+    agHtml = `<div class="ag-note">${escapeHtml(camp.ad_groups)}</div>`;
+  }
+
+  return `
+    <div class="card">
+      <div class="card-header" onclick="this.parentElement.classList.toggle('expanded')">
+        <div>
+          <div class="card-title">${escapeHtml(camp.name)}</div>
+        </div>
+        <span class="card-status ${statusClass(camp.status)}">${escapeHtml(camp.status)}</span>
+        <span class="chevron">&#9656;</span>
+      </div>
+      <div class="card-budget">${budget}${totalKw ? ` &middot; ${totalKw} słów kluczowych &middot; ${ags.length} grup reklam` : ''}</div>
+      ${camp.note ? `<div class="card-note">${escapeHtml(camp.note)}</div>` : ''}
+      <div class="card-body">${agHtml}</div>
+    </div>
+  `;
+}
+
+function renderSimpleCard(item, statusClassName, extra) {
+  return `
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">${escapeHtml(item.name)}</div>
+        <span class="card-status ${statusClassName}">${escapeHtml(extra || '')}</span>
+      </div>
+      <div class="card-note">${escapeHtml(item.reason || item.note || '')}</div>
+    </div>
+  `;
+}
+
+function renderPlan() {
+  document.getElementById('board').innerHTML = PLAN.campaigns.map(renderCard).join('');
+  document.getElementById('pauseBoard').innerHTML = PLAN.to_pause.map(c => renderSimpleCard(c, 'status-pause', 'PAUSE')).join('');
+  document.getElementById('untouchedBoard').innerHTML = PLAN.untouched.map(c => renderSimpleCard(c, 'status-untouched', c.type)).join('');
+
+  const newBudget = PLAN.campaigns.reduce((a,c)=>a+(c.budget_month_pln||0),0);
+  const totalKw = PLAN.campaigns.reduce((a,c)=> a + (Array.isArray(c.ad_groups) ? c.ad_groups.reduce((x,ag)=>x+ag.keywords.length,0) : 0), 0);
+  const newCampaigns = PLAN.campaigns.filter(c=>c.status.includes('NEW')).length;
+  document.getElementById('summary').innerHTML = `
+    <div class="summary-pill"><b>${newBudget} PLN</b>łączny budżet/mies (plan)</div>
+    <div class="summary-pill"><b>${newCampaigns}</b>nowe kampanie</div>
+    <div class="summary-pill"><b>${PLAN.campaigns.length}</b>kampanii w planie łącznie</div>
+    <div class="summary-pill"><b>${totalKw}</b>słów kluczowych łącznie</div>
+  `;
+}
+</script>
+
+</body>
+</html>
