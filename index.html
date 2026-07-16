@@ -255,18 +255,19 @@
 <li class="done-item">Reklamy SKAG wzbogacone do maksimum (15 nagłówków / 4 opisy) + 12 rozszerzeń podłączonych do kampanii Implanty.</li>
 <li class="done-item">Zapauzowane duplikaty źródłowe w Chirurgii (&quot;Grupa reklam 1&quot;, &quot;Implanty zębowe&quot;) po migracji do Implantów.</li>
 <li class="done-item">Uruchomione śledzenie Quality Score (cotygodniowy snapshot + przypomnienie w poniedziałki).</li>
+<li class="done-item">Kampania MG_GSN_Implanty ręcznie włączona (ENABLED) w interfejsie Google Ads po przejrzeniu.</li>
+<li class="done-item">Budżety kampanii narkozowych (dorośli, dzieci) ręcznie zaktualizowane w interfejsie Google Ads.</li>
+<li class="done-item">Dedup Diagnostyki i Protetyki: 5 duplikatów w Diagnostyce okazało się już usuniętych wcześniej (nic do zrobienia); w Protetyce zapauzowano &quot;Protetyka - [cennik/cena]&quot; (166.82 PLN wydane, 0 konwersji) i zostawiono lepiej działającą &quot;Protetyka&quot; (2 konwersje).</li>
+<li class="done-item">Dashboard opublikowany na GitHub Pages (hasło supra2026, zakładki Dent/Med, wykres QS zawężony do Implantów).</li>
+<li class="done-item">Nagłówki z cenami (z cennik.md) dodane w 13 reklamach na Ortodoncji/Protetyce/Diagnostyce/Chirurgii (12 grup, w tym 2 identyczne reklamy &quot;Aparat ortodontyczny&quot;); pominięte celowo: All on X, Kortykomia, Mosty (brak dokładnej ceny w cenniku).</li>
+<li class="done-item">Rebalans budżetu &quot;pozostałych&quot; 4 kampanii do łącznych 500 PLN/mies (Protetyka 150, Diagnostyka 149, Chirurgia 133, brand 68) — potwierdzone przez klienta. Konto ma teraz dokładnie 3000 PLN/mies zarządzanego budżetu (2500 główna 4 + 500 pozostałe).</li>
           </ul>
         </div>
         <div class="checklist-col">
           <h3>○ Do zrobienia</h3>
           <ul>
-            <li class="pending-item">Kampania MG_GSN_Implanty jest PAUSED — wymaga ręcznego włączenia w interfejsie Google Ads po ostatecznym przejrzeniu.</li>
-<li class="pending-item">8 dedykowanych landing page&#x27;y pod SKAG (noindex, H1 = dokładna fraza) — czekamy na webmastera (patrz sekcja niżej).</li>
+            <li class="pending-item">8 dedykowanych landing page&#x27;y pod SKAG (noindex, H1 = dokładna fraza) — czekamy na webmastera (patrz sekcja niżej).</li>
 <li class="pending-item">Po potwierdzeniu przez webmastera: aktualizacja final_urls reklam SKAG z tymczasowego /oferta/implantologia/ na docelowe podstrony.</li>
-<li class="pending-item">Docelowe budżety dla Narkozy (dorośli, obecnie budżet historyczny bez zmian) i Narkozy dla dzieci (obecnie placeholder 10 PLN/dzień) w ramach puli 2500 PLN.</li>
-<li class="pending-item">Dedup pozostałych duplikatów: 5 duplikatowych ad groups w Diagnostyce i 1 w Protetyce (&quot;Protetyka - [cennik/cena]&quot;).</li>
-<li class="pending-item">Redukcja budżetu kampanii brandowej do puli &quot;pozostałe 500 zł&quot; (~122 → 68 PLN/mies) — ryzykowna zmiana najlepiej działającej kampanii, jeszcze nie potwierdzona przez klienta.</li>
-<li class="pending-item">Nagłówki z cenami (z cennik.md) dla pozostałych kampanii — obecnie tylko Implanty ma cenę w nagłówku.</li>
 <li class="pending-item">Sekcja Med (supramed.pl) — do przygotowania w kolejnym etapie.</li>
           </ul>
         </div>
@@ -307,10 +308,9 @@
     </div>
 
     <div class="warning-banner">
-      <b>Uwaga:</b> kampania brandowa (MG_gsn_brand_supradent) jest obecnie najbardziej efektywną
-      kampanią na koncie (18.9 konwersji / 123 PLN, ~6.5 PLN za konwersję) i w pełnym planie wpada do puli
-      "pozostałe 500 zł" — jej budżet spadłby z ok. 122 do 68 PLN/mies. Ta zmiana NIE została jeszcze
-      wdrożona ani potwierdzona.
+      <b>Uwaga:</b> kampania brandowa (MG_gsn_brand_supradent) była najbardziej efektywną kampanią na
+      koncie (18.9 konwersji / 123 PLN, ~6.5 PLN za konwersję). Zgodnie z potwierdzeniem klienta jej
+      budżet został zmniejszony ze 122 do 68 PLN/mies (pula "pozostałe 500 zł") — 16.07.2026, wykonane.
     </div>
 
     <div class="legend">
@@ -384,7 +384,7 @@ function renderApp() {
 
 /* ---- QS chart (Implanty only) ---- */
 function renderQsChart() {
-  const QS = {"dates": [], "values": []};
+  const QS = __QS_DATA__;
   const container = document.getElementById('qsChartContainer');
   if (!QS.dates.length) {
     container.innerHTML = '<div class="qs-empty">Kampania Implanty jest nowa i jeszcze PAUSED — Google nie wyliczył jeszcze Quality Score dla żadnej frazy (potrzebuje realnych wyświetleń). Wykres pojawi się automatycznie, gdy zbierzemy pierwsze dane po uruchomieniu kampanii.</div>';
