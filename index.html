@@ -433,10 +433,6 @@ function switchTab(tab) {
   document.getElementById('tabMedBtn').classList.toggle('active', tab === 'med');
 }
 
-if (sessionStorage.getItem('supra_auth') === '1') {
-  showApp();
-}
-
 function escapeHtml(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
@@ -757,6 +753,14 @@ function renderDentBoard() {
   const sorted = [...DENT_DATA.campaigns].sort((a, b) => (b.monthly_budget_pln || 0) - (a.monthly_budget_pln || 0));
   document.getElementById('dentBoard').innerHTML = sorted.map(renderCampaignCard).join('');
   renderQsChart();
+}
+
+/* Auto-login for returning visitors - MUST run after every const above this
+   point is initialized (renderApp() reads DENT_DATA/MED_DATA/PLAN/CHANNEL_*),
+   otherwise a returning visitor with a cached session hits a temporal-dead-zone
+   ReferenceError and the whole page renders blank. */
+if (sessionStorage.getItem('supra_auth') === '1') {
+  showApp();
 }
 </script>
 
