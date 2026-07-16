@@ -314,7 +314,6 @@
           <ul>
             <li class="pending-item">8 dedykowanych landing page&#x27;y pod SKAG (noindex, H1 = dokładna fraza) — czekamy na webmastera (patrz sekcja niżej).</li>
 <li class="pending-item">Po potwierdzeniu przez webmastera: aktualizacja final_urls reklam SKAG z tymczasowego /oferta/implantologia/ na docelowe podstrony.</li>
-<li class="pending-item">Sekcja Med (supramed.pl) — do przygotowania w kolejnym etapie.</li>
           </ul>
         </div>
       </div>
@@ -431,15 +430,19 @@ function escapeHtml(s) {
 }
 
 function renderApp() {
-  renderQsChart();
-  renderCsvDownload();
-  renderPlan();
-  renderMedView();
+  const steps = [renderQsChart, renderCsvDownload, renderPlan, renderMedView];
+  for (const step of steps) {
+    try {
+      step();
+    } catch (e) {
+      console.error('renderApp step failed:', step.name, e);
+    }
+  }
 }
 
 /* ---- QS chart (Implanty only) ---- */
 function renderQsChart() {
-  const QS = __QS_DATA__;
+  const QS = {"dates": [], "values": []};
   const container = document.getElementById('qsChartContainer');
   if (!QS.dates.length) {
     container.innerHTML = '<div class="qs-empty">Kampania Implanty jest nowa i jeszcze PAUSED — Google nie wyliczył jeszcze Quality Score dla żadnej frazy (potrzebuje realnych wyświetleń). Wykres pojawi się automatycznie, gdy zbierzemy pierwsze dane po uruchomieniu kampanii.</div>';
